@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { themeByAQI } from "@/lib/theme";
 import { data as mockData } from "@/lib/mock";
-import { useRouter } from "next/router";
+import { useRouter } from 'next/navigation'
 
 export default function AuthPage({ onSuccess }: { onSuccess: () => void }) {
   const theme = themeByAQI(mockData.aqi);
