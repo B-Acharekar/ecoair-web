@@ -1,13 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { themeByAQI } from "@/lib/theme";
 import { data as mockData } from "@/lib/mock";
-import { useRouter } from 'next/navigation'
 
-export default function AuthPage({ onSuccess }: { onSuccess: () => void }) {
+import { auth, googleProvider } from "@/lib/firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
+
+export default function AuthPage() {
   const theme = themeByAQI(mockData.aqi);
   const router = useRouter();
+
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +23,7 @@ export default function AuthPage({ onSuccess }: { onSuccess: () => void }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
 
@@ -30,21 +38,32 @@ export default function AuthPage({ onSuccess }: { onSuccess: () => void }) {
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error(err);
+      setMessage(err.message || "Authentication failed");
+    } finally {
       setLoading(false);
-      router.push("/dashboard") 
-      // Simulate success
-      onSuccess();
-    }, 1000);
+    }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await signInWithPopup(auth, googleProvider);
       router.push("/dashboard");
-      onSuccess();
-    }, 1000);
+    } catch (err: any) {
+      console.error(err);
+      setMessage(err.message || "Google sign-in failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,7 +75,6 @@ export default function AuthPage({ onSuccess }: { onSuccess: () => void }) {
           {isLogin ? "Login" : "Sign Up"}
         </h1>
 
-        {/* Form */}
         <form className="space-y-4" onSubmit={handleSubmit}>
           <input
             type="email"
@@ -92,36 +110,25 @@ export default function AuthPage({ onSuccess }: { onSuccess: () => void }) {
             className="w-full py-3 rounded-xl bg-emerald-400/30 hover:bg-emerald-400/50 transition font-semibold"
             disabled={loading}
           >
-            {loading
-              ? "Processing..."
-              : isLogin
-              ? "Login"
-              : "Sign Up"}
+            {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
           </button>
         </form>
 
-        {/* OR Divider */}
         <div className="flex items-center justify-center gap-4 my-2">
           <hr className="border-white/20 flex-1" />
           <span className="text-xs text-neutral-400 uppercase">or</span>
           <hr className="border-white/20 flex-1" />
         </div>
 
-        {/* Google Sign-In */}
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
           className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-white/20 hover:bg-white/30 transition font-medium text-black"
         >
-          <img
-            src="/images/google-icon.svg"
-            alt="Google"
-            className="w-5 h-5"
-          />
+          <img src="/images/google-icon.svg" alt="Google" className="w-5 h-5" />
           {loading ? "Processing..." : "Continue with Google"}
         </button>
 
-        {/* Toggle Link */}
         <p className="text-center text-neutral-300 text-sm mt-4">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
@@ -135,10 +142,7 @@ export default function AuthPage({ onSuccess }: { onSuccess: () => void }) {
           </button>
         </p>
 
-        {/* Message */}
-        {message && (
-          <p className="text-center mt-2 text-sm text-rose-400">{message}</p>
-        )}
+        {message && <p className="text-center mt-2 text-sm text-rose-400">{message}</p>}
       </div>
     </main>
   );
