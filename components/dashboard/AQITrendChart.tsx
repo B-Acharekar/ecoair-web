@@ -5,8 +5,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface TrendPoint {
-    timestamp: string;
-    aqi: number;
+    time: string;
+    value: number;
 }
 
 interface AQITrendChartProps {
@@ -16,12 +16,12 @@ interface AQITrendChartProps {
 export function AQITrendChart({ data }: AQITrendChartProps) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-    const maxAQI = Math.max(...data.map(d => d.aqi), 100) * 1.2; // Add some headroom
+    const maxAQI = Math.max(...data.map(d => d.value), 100) * 1.2; // Add some headroom
 
     // Normalize points for SVG (0-100 coordinate system)
     const points = data.map((d, i) => {
         const x = (i / (data.length - 1)) * 100;
-        const y = 100 - (d.aqi / maxAQI) * 100;
+        const y = 100 - (d.value / maxAQI) * 100;
         return { x, y, ...d };
     });
 
@@ -121,8 +121,8 @@ export function AQITrendChart({ data }: AQITrendChartProps) {
                                 bottom: `${100 - points[hoveredIndex].y + 10}%`
                             }}
                         >
-                            <div className="font-bold text-primary">{points[hoveredIndex].aqi} AQI</div>
-                            <div className="text-white/50">{points[hoveredIndex].timestamp}</div>
+                            <div className="font-bold text-primary">{points[hoveredIndex].value} AQI</div>
+                            <div className="text-white/50">{points[hoveredIndex].time}</div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -136,7 +136,7 @@ export function AQITrendChart({ data }: AQITrendChartProps) {
                         className="cursor-default"
                         animate={{ color: hoveredIndex === i ? "var(--primary)" : "rgba(255,255,255,0.3)" }}
                     >
-                        {d.timestamp}
+                        {d.time}
                     </motion.span>
                 ))}
             </div>

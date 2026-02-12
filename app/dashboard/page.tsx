@@ -13,11 +13,19 @@ import { AssistantOrb } from "@/components/assistant/AssistantOrb";
 import { DeviceSetupModal } from "@/components/setup/DeviceSetupModal";
 import { Settings } from "lucide-react";
 
-// Keep mock as fallback
+// Mock fallback
 import { data as initialData } from "@/lib/mock";
 
+type SensorPayload = {
+  temperature: number;
+  humidity: number;
+  mq135_raw: number;
+  mq7_raw: number;
+};
+
 export default function Dashboard() {
-  const [sensorData, setSensorData] = useState<any>(null);
+  const [sensorData, setSensorData] = useState<SensorPayload | null>(null);
+  const [aqiHistory, setAqiHistory] = useState<number[]>([]);
 
   const [purifierOn, setPurifierOn] = useState(initialData.purifierOn);
   const [isAuto, setIsAuto] = useState<boolean>(
@@ -26,7 +34,9 @@ export default function Dashboard() {
   const [fanSpeed, setFanSpeed] = useState(initialData.fanSpeed);
   const [showSetup, setShowSetup] = useState(false);
 
-  // 🔥 Fetch ESP32 data every 5 sec
+  // ==============================
+  // FETCH DATA
+  // ==============================
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -43,10 +53,94 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Use live data if available, otherwise fallback to mock
-  const activeAQI = sensorData?.mq135 ?? initialData.aqi;
-  const temperature = sensorData?.temp ?? initialData.temperature;
-  const humidity = sensorData?.hum ?? initialData.humidity;
+  // ==============================
+  // RAW VALUES
+  // ==============================
+  const temperature =
+    sensorData?.temperature ?? initialData.temperature;
+  const humidity =
+    sensorData?.humidity ?? initialData.humidity;
+
+  const mq135Raw = sensorData?.mq135_raw ?? 0;
+  const mq7Raw = sensorData?.mq7_raw ?? 0;
+
+  // ==============================
+  // SENSOR CONVERSION
+  // ==============================
+
+  const mq135Voltage = (mq135Raw / 4095) * 3.3;
+  const mq7Voltage = (mq7Raw / 4095) * 3.3;
+
+  // Approximate PPM models (basic estimation curves)
+  const co2ppm = Math.round(mq135Voltage * 400); // ~400–2000 ppm
+  const coppm = Math.round(mq7Voltage * 100);    // ~0–300 ppm
+
+  // ==============================
+  // AQI CALCULATION
+  // ==============================
+
+  const co2Index = Math.min((co2ppm / 2000) * 250, 250);
+  const coIndex = Math.min((coppm / 300) * 250, 250);
+
+  const activeAQI = Math.round(co2Index + coIndex);
+
+  // ==============================
+  // AQI LEVEL
+  // ==============================
+
+  let level = "Good";
+  if (activeAQI > 300) level = "Hazardous";
+  else if (activeAQI > 200) level = "Very Poor";
+  else if (activeAQI > 150) level = "Poor";
+  else if (activeAQI > 100) level = "Moderate";
+
+  // ==============================
+  // DOMINANT GAS
+  // ==============================
+
+  const dominantGas =
+    co2ppm > coppm
+      ? { name: "CO₂", value: co2ppm }
+      : { name: "CO", value: coppm };
+
+  // ==============================
+  // TREND HISTORY (Real, not random)
+  // ==============================
+
+  useEffect(() => {
+    if (!activeAQI) return;
+
+    setAqiHistory((prev) => {
+      const updated = [...prev, activeAQI];
+      return updated.slice(-12); // keep last 12 readings
+    });
+  }, [activeAQI]);
+
+  const trendData = aqiHistory.map((value, index) => ({
+    time: index.toString(),
+    value,
+  }));
+
+  // ==============================
+  // AUTO PURIFIER LOGIC
+  // ==============================
+
+  useEffect(() => {
+    if (!isAuto) return;
+
+    if (activeAQI > 200) {
+      setPurifierOn(true);
+      setFanSpeed(3);
+    } else if (activeAQI > 120) {
+      setPurifierOn(true);
+      setFanSpeed(2);
+    } else if (activeAQI > 80) {
+      setPurifierOn(true);
+      setFanSpeed(1);
+    } else {
+      setPurifierOn(false);
+    }
+  }, [activeAQI, isAuto]);
 
   return (
     <main className="min-h-screen p-4 sm:p-8 pb-32">
@@ -58,7 +152,9 @@ export default function Dashboard() {
             <h1 className="text-4xl font-display font-bold text-white tracking-tight">
               EcoAir<span className="text-primary">.ai</span>
             </h1>
-            <p className="text-white/50 mt-1">Smart Environment Control</p>
+            <p className="text-white/50 mt-1">
+              Smart Environment Control
+            </p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -83,10 +179,10 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Main Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          {/* Left Column */}
+          {/* Left */}
           <div className="lg:col-span-4 space-y-8 flex flex-col">
             <div className="flex-1 min-h-[300px]">
               <PurifierControls
@@ -107,28 +203,32 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Center Column */}
+          {/* Center */}
           <div className="lg:col-span-5 min-h-[500px]">
             <AQIHero
               aqi={activeAQI}
-              level={initialData.level}
+              level={level}
             />
           </div>
 
-          {/* Right Column */}
+          {/* Right */}
           <div className="lg:col-span-3 space-y-8 flex flex-col">
             <div className="flex-1">
-              <PollutantDominance gases={initialData.gases} />
+              <PollutantDominance
+                gases={[
+                  { name: "CO₂", value: co2ppm },
+                  { name: "CO", value: coppm },
+                ]}
+              />
             </div>
 
             <div className="h-64">
-              <AQITrendChart data={initialData.trend} />
+              <AQITrendChart data={trendData} />
             </div>
           </div>
 
         </div>
 
-        {/* Assistant */}
         <AssistantOrb />
       </div>
     </main>
