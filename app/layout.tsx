@@ -1,47 +1,33 @@
-// app/layout.tsx
+import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-body",
+  variable: "--font-inter",
+  display: "swap",
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-display",
+  variable: "--font-space-grotesk",
+  display: "swap",
 });
 
-export const metadata = {
-  title: "EcoAir",
-  description: "Energy-Efficient Smart Air Quality Monitoring",
+export const metadata: Metadata = {
+  title: "EcoAir | Smart Air Quality System",
+  description: "Next-gen intelligent air purification dashboard",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable}`}
-    >
-      <body
-        className="
-          min-h-screen
-          bg-neutral-950
-          text-neutral-200
-          antialiased
-          font-[var(--font-body)]
-        "
-      >
-        {/* Page entrance animation */}
-        <div className="animate-dashboard-in">
-          {children}
-        </div>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body className="antialiased min-h-screen">
+        {children}
       </body>
     </html>
   );
