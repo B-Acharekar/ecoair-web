@@ -68,19 +68,15 @@ export default function Dashboard() {
   // SENSOR CONVERSION
   // ==============================
 
-  const mq135Voltage = (mq135Raw / 4095) * 3.3;
-  const mq7Voltage = (mq7Raw / 4095) * 3.3;
-
-  // Approximate PPM models (basic estimation curves)
-  const co2ppm = Math.round(mq135Voltage * 400); // ~400–2000 ppm
-  const coppm = Math.round(mq7Voltage * 100);    // ~0–300 ppm
+  const co2ppm = Math.round((mq135Raw / 4095) * 2000); // Scale up to 2000ppm
+  const coppm = Math.round((mq7Raw / 4095) * 500);    // Scale up to 500ppm
 
   // ==============================
   // AQI CALCULATION
   // ==============================
 
-  const co2Index = Math.min((co2ppm / 2000) * 250, 250);
-  const coIndex = Math.min((coppm / 300) * 250, 250);
+  const co2Index = Math.min((co2ppm / 1200) * 150, 300);
+  const coIndex = Math.min((coppm / 100) * 150, 300);
 
   const activeAQI = Math.round(co2Index + coIndex);
 
@@ -89,10 +85,18 @@ export default function Dashboard() {
   // ==============================
 
   let level = "Good";
-  if (activeAQI > 300) level = "Hazardous";
-  else if (activeAQI > 200) level = "Very Poor";
-  else if (activeAQI > 150) level = "Poor";
-  else if (activeAQI > 100) level = "Moderate";
+  let statusColor = "#10b981"; // Default Green
+
+  if (activeAQI > 200) {
+    level = "Hazardous";
+    statusColor = "#ef4444"; // Red
+  } else if (activeAQI > 150) {
+    level = "Very Poor";
+    statusColor = "#f97316"; // Orange
+  } else if (activeAQI > 100) {
+    level = "Moderate";
+    statusColor = "#eab308"; // Yellow
+  }
 
   // ==============================
   // DOMINANT GAS
