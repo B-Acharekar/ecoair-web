@@ -1,133 +1,90 @@
 "use client";
 
-import { themeByAQI } from "@/lib/theme";
-import { data as mockData } from "@/lib/mock";
-import MiniStats from "@/components/MiniStats";
+import { motion } from "framer-motion";
 import Link from "next/link";
+import { AssistantOrb } from "@/components/assistant/AssistantOrb";
+import { NeonButton } from "@/components/ui/NeonButton";
+import { ArrowRight, Shield, Zap, Globe } from "lucide-react";
 
 export default function LandingPage() {
-  const activeAQI = mockData.aqi;
-  const theme = themeByAQI(activeAQI);
+    return (
+        <main className="min-h-screen bg-[#050505] relative overflow-hidden flex flex-col items-center justify-center selection:bg-primary selection:text-black">
+            {/* Grid Background */}
+            <div className="absolute inset-0 z-0 opacity-20" 
+                 style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+            
+            {/* Ambient Glows */}
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 blur-[150px] rounded-full" />
 
-  return (
-    <main className={`min-h-screen text-white bg-gradient-to-br ${theme.bg} font-sans`}>
-      {/* ---------------- Navbar ---------------- */}
-      <nav className="flex justify-between items-center px-6 md:px-16 py-6">
-        <h1 className={`text-2xl font-bold ${theme.accent}`}>EcoAir</h1>
-        <div className="flex gap-4 items-center">
-          <Link href="/auth" className="px-4 py-2 rounded-lg hover:bg-white/20 transition">
-            Login
-          </Link>
-          <Link href="/auth" className="px-4 py-2 rounded-lg bg-emerald-400/30 hover:bg-emerald-400/50 transition">
-            Sign Up
-          </Link>
-        </div>
-      </nav>
+            <div className="relative z-10 max-w-5xl mx-auto px-6 text-center flex flex-col items-center gap-12">
+                <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="relative"
+                >
+                    <AssistantOrb />
+                    <div className="absolute inset-0 bg-primary/5 blur-3xl rounded-full -z-10 animate-pulse" />
+                </motion.div>
 
-      {/* ---------------- Hero ---------------- */}
-      <section className="relative flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-16 pt-20 pb-32 gap-12 md:gap-24">
-        {/* Left: Text */}
-        <div className="md:w-1/2 text-center md:text-left space-y-6">
-          <h1 className={`text-4xl sm:text-5xl md:text-6xl font-bold ${theme.accent}`}>
-            Smart Indoor Air Management
-          </h1>
-          <p className="text-neutral-200 text-lg sm:text-xl md:text-2xl">
-            Monitor, purify, and control your air quality from anywhere. Keep your home safe and fresh.
-          </p>
+                <div className="space-y-6">
+                    <motion.h1 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        className="text-6xl md:text-8xl font-display font-medium text-white tracking-tighter"
+                    >
+                        Breathe <span className="text-primary italic">Smarter</span>.
+                    </motion.h1>
+                    <motion.p 
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-xl text-white/40 max-w-2xl mx-auto font-light leading-relaxed"
+                    >
+                        EcoAir.ai blends industrial IoT precision with a stunning glassmorphism interface. 
+                        Monitor air quality globally and control your environment in real-time.
+                    </motion.p>
+                </div>
 
-          <div className="mt-6 flex flex-col sm:flex-row justify-center md:justify-start gap-4">
-            <a
-              href="#features"
-              className="px-6 py-3 rounded-xl bg-white/20 backdrop-blur-md hover:bg-white/30 transition"
-            >
-              Explore Features
-            </a>
-            <a
-              href="#setup"
-              className="px-6 py-3 rounded-xl bg-emerald-400/30 hover:bg-emerald-400/50 transition"
-            >
-              Setup Your Device
-            </a>
-          </div>
-        </div>
+                <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex flex-col sm:flex-row gap-6"
+                >
+                    <Link href="/login">
+                        <NeonButton className="px-12 py-8 text-lg uppercase tracking-[0.2em] font-bold">
+                            Enter Dashboard <ArrowRight className="w-5 h-5 ml-4" />
+                        </NeonButton>
+                    </Link>
+                    <Link href="/signup">
+                        <button className="px-12 py-4 rounded-full border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all uppercase tracking-widest text-xs flex items-center gap-3 font-bold group">
+                            Start Genesis <Zap className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        </button>
+                    </Link>
+                </motion.div>
 
-        {/* Right: Hero Image */}
-        <div className="md:w-1/2 flex justify-center">
-          <img
-            src="/images/Landing-hero.jpg"
-            alt="EcoAir Hero"
-            className="rounded-2xl shadow-2xl w-full max-w-lg md:max-w-full object-cover"
-          />
-        </div>
-      </section>
-
-      {/* ---------------- Stats Section ---------------- */}
-      <section className="px-6 md:px-16 py-16">
-        <h2 className={`text-3xl sm:text-4xl md:text-5xl font-bold text-center ${theme.accent}`}>
-          Live Air Stats
-        </h2>
-        <div className="mt-12 max-w-5xl mx-auto">
-          <MiniStats data={mockData} />
-        </div>
-      </section>
-
-      {/* ---------------- Features ---------------- */}
-      <section id="features" className="px-6 md:px-16 py-16 grid gap-8 md:grid-cols-3 text-center">
-        <Feature
-          title="Multi-Gas Sensing"
-          desc="Monitor CO, NO₂, O₃, VOCs in real time with high accuracy."
-        />
-        <Feature
-          title="Remote Control"
-          desc="Adjust purifier modes, fan speed, and receive notifications from your device."
-        />
-        <Feature
-          title="Trends & Insights"
-          desc="Track AQI, temperature, humidity, and gas levels over time."
-        />
-      </section>
-
-      {/* ---------------- Setup / CTA ---------------- */}
-      <section
-        id="setup"
-        className="px-6 md:px-16 py-20 text-center rounded-2xl bg-white/10 backdrop-blur-xl mx-6 md:mx-16 mt-12"
-      >
-        <h2 className={`text-4xl sm:text-5xl md:text-6xl font-bold ${theme.accent}`}>
-          Connect Your Device
-        </h2>
-        <p className="mt-4 text-neutral-200 max-w-lg mx-auto text-lg sm:text-xl">
-          Configure, monitor, and control your EcoAir device easily. Enjoy safe, fresh air at home.
-        </p>
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          <a
-            href="/signup"
-            className="px-8 py-4 rounded-xl bg-emerald-400/30 hover:bg-emerald-400/50 transition text-lg sm:text-xl"
-          >
-            Sign Up
-          </a>
-          <a
-            href="/login"
-            className="px-8 py-4 rounded-xl bg-white/20 hover:bg-white/30 transition text-lg sm:text-xl"
-          >
-            Login
-          </a>
-        </div>
-      </section>
-
-      {/* ---------------- Footer ---------------- */}
-      <footer className="px-6 md:px-16 py-8 mt-12 text-center text-neutral-400">
-        &copy; {new Date().getFullYear()} EcoAir. All rights reserved.
-      </footer>
-    </main>
-  );
-}
-
-/* ---------- Feature Card ---------- */
-function Feature({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="rounded-2xl p-8 bg-white/10 backdrop-blur-xl border border-white/10 hover:scale-105 transform transition duration-300">
-      <h3 className="text-xl sm:text-2xl font-semibold mb-2">{title}</h3>
-      <p className="text-neutral-300 text-sm sm:text-base">{desc}</p>
-    </div>
-  );
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-20"
+                >
+                    {[
+                        { icon: Shield, title: "Hysteresis Logic", desc: "Hardware safety buffer prevents relay chattering." },
+                        { icon: Zap, title: "Mailbox Sync", desc: "Instant bi-directional command processing." },
+                        { icon: Globe, title: "Secure Fetch", desc: "Global AQI data via protected server actions." }
+                    ].map((feature, i) => (
+                        <div key={i} className="flex flex-col items-center gap-4">
+                            <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                                <feature.icon className="w-6 h-6 text-primary" />
+                            </div>
+                            <h3 className="text-white font-medium">{feature.title}</h3>
+                            <p className="text-white/30 text-xs leading-relaxed max-w-[200px]">{feature.desc}</p>
+                        </div>
+                    ))}
+                </motion.div>
+            </div>
+        </main>
+    );
 }

@@ -2,6 +2,7 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { motion } from "framer-motion";
+import { RollingNumber } from "@/components/ui/RollingNumber";
 
 interface Gas {
     name: string;
@@ -27,9 +28,10 @@ export function PollutantDominance({ gases }: PollutantDominanceProps) {
                     <div key={name} className="relative group">
                         <div className="flex justify-between text-sm mb-2">
                             <span className="text-white/70 font-medium">{name}</span>
-                            <span className="text-white/90 font-mono">
-                                {value} <span className="text-xs text-white/40">ppm</span>
-                            </span>
+                            <div className="flex items-center gap-1 text-white/90 font-mono">
+                                <RollingNumber value={value} className="text-sm" /> 
+                                <span className="text-xs text-white/40">ppm</span>
+                            </div>
                         </div>
 
                         <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -37,13 +39,12 @@ export function PollutantDominance({ gases }: PollutantDominanceProps) {
                                 initial={{ width: 0 }}
                                 animate={{ width: `${(value / maxVal) * 100}%` }}
                                 transition={{ duration: 1, delay: i * 0.1 }}
-                                className={`h-full rounded-full ${
-                                    value > 40
-                                        ? "bg-accent shadow-[0_0_10px_var(--accent)]"
-                                        : value > 25
+                                className={`h-full rounded-full ${value > 40
+                                    ? "bg-accent shadow-[0_0_10px_var(--accent)]"
+                                    : value > 25
                                         ? "bg-yellow-400"
                                         : "bg-primary"
-                                }`}
+                                    }`}
                             />
                         </div>
                     </div>

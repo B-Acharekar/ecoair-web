@@ -1,8 +1,9 @@
 import { Redis } from '@upstash/redis';
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 // Initialize Redis client
-// These variables are automatically provided when you link the Upstash integration in Vercel
 const redis = Redis.fromEnv();
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +13,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    // 1. Fetch the command state from Firestore (The Mailbox)
+    const cmdDoc = await getDoc(doc(db, "commands", "purifier"));
+    const isForcedOn = cmdDoc.exists() ? cmdDoc.data().active : false;
+
+    // 2. Standard sensor payload logging to Redis
     const payload = {
       temperature: body.temperature,
       humidity: body.humidity,
@@ -21,25 +27,38 @@ export async function POST(request: Request) {
       lastUpdated: new Date().toISOString(),
     };
 
-    // Store in Redis - "latest" key for instant access
     await redis.set('ecoair_latest', payload);
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    // 3. Construct the response for ESP32
+    // We return both "command" for the snippet compatibility and "cmd" for user preference
+    return NextResponse.json({ 
+      success: true, 
+      command: isForcedOn ? "RELAY_ON" : "RELAY_OFF",
+      cmd: isForcedOn ? 1 : 0,
+      timestamp: new Date().toISOString()
+    }, { status: 200 });
+    
   } catch (error) {
-    console.error("Redis POST Error:", error);
+    console.error("API POST Error:", error);
     return NextResponse.json({ error: 'Sync failed' }, { status: 400 });
   }
 }
 
 export async function GET() {
   try {
-    const data = await redis.get('ecoair_latest');
+    const [latest, target] = await Promise.all([
+      redis.get('ecoair_latest'),
+      redis.get('ecoair_target')
+    ]);
 
-    if (!data) {
+    if (!latest) {
       return NextResponse.json({ error: "No data found" }, { status: 404 });
     }
 
-    return NextResponse.json(data, {
+    return NextResponse.json({
+      ...(latest as object),
+      target: target || { purifierOn: false, fanSpeed: 0, mode: "AUTO" }
+    }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'Pragma': 'no-cache',

@@ -1,0 +1,102 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { NeonButton } from "@/components/ui/NeonButton";
+import Link from "next/link";
+import { auth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Mail, Lock, Shield, Globe } from "lucide-react";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [error, setError] = useState("");
+
+  const handleGoogleLogin = async () => {
+    try {
+      setError("");
+      await signInWithPopup(auth, googleProvider);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message);
+      console.error(err);
+    }
+  };
+    return (
+        <main className="min-h-screen bg-[#050505] flex items-center justify-center p-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full" />
+            
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-md relative z-10"
+            >
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl font-display font-medium text-white mb-2">Welcome Back</h1>
+                    <p className="text-white/40 text-sm tracking-widest uppercase">Secure Access Port</p>
+                </div>
+
+                <GlassCard className="p-10 flex flex-col gap-8" intensity="high">
+                    <div className="space-y-6 w-full">
+                        <div className="space-y-4">
+                            <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block ml-4">Identifier</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                                <input 
+                                    type="email" 
+                                    placeholder="Enter your email"
+                                    className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:ring-2 ring-primary/20 focus:bg-white/[0.08] transition-all"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold block ml-4">Access Code</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                                <input 
+                                    type="password" 
+                                    placeholder="••••••••"
+                                    className="w-full pl-14 pr-6 py-5 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:ring-2 ring-primary/20 focus:bg-white/[0.08] transition-all"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <NeonButton className="w-full py-8 text-sm uppercase tracking-[0.2em]" onClick={() => {/* Standard login logic here */}}>
+                        Establish Connection
+                    </NeonButton>
+
+                    <div className="relative py-2">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                        <div className="relative flex justify-center text-[10px] uppercase tracking-widest text-white/20"><span className="bg-[#0b0b0b] px-2 font-bold">External Authentication</span></div>
+                    </div>
+
+                    <button 
+                        onClick={handleGoogleLogin}
+                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group"
+                    >
+                        <Globe className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors" />
+                        <span className="text-xs font-bold text-white/60">Continue with Google</span>
+                    </button>
+
+                    {error && <p className="text-red-400 text-[10px] text-center uppercase tracking-widest font-bold">{error}</p>}
+
+                    <div className="text-center space-y-4">
+                        <p className="text-white/20 text-xs">
+                            Don't have an endpoint? 
+                            <Link href="/signup" className="text-primary hover:underline ml-2">Register Device</Link>
+                        </p>
+                    </div>
+                </GlassCard>
+
+                <div className="mt-8 flex items-center justify-center gap-2 text-white/10">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-[10px] uppercase tracking-[0.3em]">End-to-End Encrypted Control</span>
+                </div>
+            </motion.div>
+        </main>
+    );
+}

@@ -8,10 +8,10 @@ import { Wifi, Smartphone, Check, Loader2, X } from "lucide-react";
 
 interface DeviceSetupModalProps {
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-
-export function DeviceSetupModal({ onClose }: DeviceSetupModalProps) {
+export function DeviceSetupModal({ onClose, onSuccess }: DeviceSetupModalProps) {
   const [step, setStep] = useState<
     "idle" | "searching" | "connected" | "sending" | "success" | "error"
   >("idle");
@@ -24,20 +24,25 @@ export function DeviceSetupModal({ onClose }: DeviceSetupModalProps) {
     const SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
     const CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
-    const payload = `${ssid}:${password}`;
-
     try {
+      if (!ssid || !password) {
+        setStatusMessage("Enter WiFi credentials");
+        return;
+      }
+
       setStep("searching");
       setStatusMessage("Searching for EcoAir device...");
-      const nav = navigator as any; // TypeScript workaround for Web Bluetooth API
+
+      const nav = navigator as any;
+
       const device = await nav.bluetooth.requestDevice({
         filters: [{ name: "EcoAir_Setup" }],
         optionalServices: [SERVICE_UUID],
       });
 
-      setStatusMessage("Connecting to device...");
+      setStatusMessage("Connecting...");
       const server = await device.gatt?.connect();
-      if (!server) throw new Error("GATT connection failed");
+      if (!server) throw new Error("Connection failed");
 
       setStep("connected");
 
@@ -46,15 +51,23 @@ export function DeviceSetupModal({ onClose }: DeviceSetupModalProps) {
         await service.getCharacteristic(CHARACTERISTIC_UUID);
 
       setStep("sending");
-      setStatusMessage("Sending WiFi credentials...");
+      setStatusMessage("Sending credentials...");
 
       const encoder = new TextEncoder();
-      await characteristic.writeValue(encoder.encode(payload));
+      await characteristic.writeValue(
+        encoder.encode(`${ssid}:${password}`)
+      );
 
-      setStatusMessage("Provisioning successful!");
       setStep("success");
+      setStatusMessage("Setup successful!");
 
       device.gatt?.disconnect();
+
+      // ✅ Notify Dashboard
+      if (onSuccess) {
+        setTimeout(() => onSuccess(), 800);
+      }
+
     } catch (error: any) {
       setStep("error");
       setStatusMessage("Failed: " + error.message);
@@ -62,83 +75,60 @@ export function DeviceSetupModal({ onClose }: DeviceSetupModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0 }}
         className="w-full max-w-md"
       >
-        <GlassCard className="p-8 relative overflow-hidden" intensity="high">
+        <GlassCard className="p-8 relative">
+
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/30 hover:text-white"
+            className="absolute top-4 right-4 text-white/40"
           >
-            <X className="w-5 h-5" />
+            <X />
           </button>
 
-          <div className="flex flex-col items-center text-center space-y-6">
+          <div className="space-y-6 text-center">
 
-            {/* Icon Section */}
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              {step === "searching" && (
-                <Loader2 className="w-12 h-12 text-primary animate-spin" />
-              )}
-              {step === "connected" && (
-                <Smartphone className="w-12 h-12 text-primary" />
-              )}
-              {step === "sending" && (
-                <Wifi className="w-12 h-12 text-primary animate-pulse" />
-              )}
-              {step === "success" && (
-                <Check className="w-14 h-14 text-primary" />
-              )}
-              {step === "error" && (
-                <span className="text-red-400 text-sm">⚠</span>
-              )}
-              {step === "idle" && (
-                <Wifi className="w-12 h-12 text-white/40" />
-              )}
+            <div className="flex justify-center">
+              {step === "searching" && <Loader2 className="animate-spin" />}
+              {step === "connected" && <Smartphone />}
+              {step === "sending" && <Wifi className="animate-pulse" />}
+              {step === "success" && <Check />}
+              {step === "idle" && <Wifi />}
             </div>
 
-            <h2 className="text-2xl font-display text-white">
-              EcoAir WiFi Setup
-            </h2>
+            <p className="text-white/60">{statusMessage}</p>
 
-            <p className="text-white/50 text-sm font-mono">
-              {statusMessage}
-            </p>
-
-            {/* Inputs */}
             {step === "idle" && (
               <>
                 <input
-                  type="text"
-                  placeholder="WiFi Name (SSID)"
-                  className="w-full p-3 bg-black/40 rounded-lg border border-white/10 text-white"
+                  placeholder="SSID"
+                  className="w-full p-2 bg-black/40 text-white"
                   onChange={(e) => setSsid(e.target.value)}
                 />
-
                 <input
-                  type="password"
                   placeholder="Password"
-                  className="w-full p-3 bg-black/40 rounded-lg border border-white/10 text-white"
+                  type="password"
+                  className="w-full p-2 bg-black/40 text-white"
                   onChange={(e) => setPassword(e.target.value)}
                 />
-
-                <NeonButton
-                  className="w-full"
-                  onClick={connectAndProvision}
-                  glow
-                >
-                  Send to Device
+                <NeonButton onClick={connectAndProvision}>
+                  Pair Device
                 </NeonButton>
               </>
             )}
 
             {step === "success" && (
-              <NeonButton className="w-full" onClick={onClose} glow>
-                Open Dashboard
+              <NeonButton
+                onClick={() => {
+                  if (onSuccess) onSuccess();
+                  onClose();
+                }}
+              >
+                Continue
               </NeonButton>
             )}
           </div>

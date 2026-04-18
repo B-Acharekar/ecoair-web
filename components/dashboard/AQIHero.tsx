@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Odometer } from "@/components/ui/RollingNumber";
 
 interface AQIHeroProps {
     aqi: number;
@@ -46,15 +47,7 @@ export function AQIHero({ aqi, level, color }: AQIHeroProps) {
                     </svg>
 
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <motion.span
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5, duration: 0.5 }}
-                            className="text-8xl font-bold font-display tracking-tighter drop-shadow-lg"
-                            style={{ color: color }} // Use dynamic color
-                        >
-                            {aqi}
-                        </motion.span>
+                        <Odometer value={aqi} className="text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]" />
                         <span className="text-sm uppercase tracking-widest text-white/50 mt-4">AQI Index</span>
                     </div>
                 </motion.div>

@@ -1,5 +1,6 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Thermometer, Droplets } from "lucide-react";
+import { RollingNumber } from "@/components/ui/RollingNumber";
 
 interface EnvironmentalStatsProps {
     temperature: number;
@@ -14,7 +15,10 @@ export function EnvironmentalStats({ temperature, humidity }: EnvironmentalStats
                     <Thermometer className="w-6 h-6 text-primary" />
                 </div>
                 <div className="text-center">
-                    <span className="text-3xl font-display font-medium text-white">{temperature}°</span>
+                    <div className="flex items-baseline justify-center">
+                        <RollingNumber value={temperature} className="text-3xl font-display font-medium text-white" />
+                        <span className="text-xl text-white/50 ml-1">°C</span>
+                    </div>
                     <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Temp</p>
                 </div>
             </GlassCard>
@@ -24,7 +28,10 @@ export function EnvironmentalStats({ temperature, humidity }: EnvironmentalStats
                     <Droplets className="w-6 h-6 text-secondary" />
                 </div>
                 <div className="text-center">
-                    <span className="text-3xl font-display font-medium text-white">{humidity}%</span>
+                    <div className="flex items-baseline justify-center">
+                        <RollingNumber value={humidity} className="text-3xl font-display font-medium text-white" />
+                        <span className="text-xl text-white/50 ml-1">%</span>
+                    </div>
                     <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Humidity</p>
                 </div>
             </GlassCard>
