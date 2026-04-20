@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { Wifi, WifiOff, Activity, AlertCircle, Home } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { BackgroundGradient } from "@/components/ui/BackgroundGradient";
+import { Navbar } from "@/components/ui/Navbar";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -88,30 +90,34 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
+    <main
+      className="min-h-screen p-6 transition-all duration-700 bg-[#050505] relative overflow-hidden"
+    >
+      <BackgroundGradient />
+
+      <div className="space-y-8 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8 flex items-center justify-between"
+        className="flex items-center justify-between"
       >
         <div>
           <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
-          <p className="text-slate-400">Device & Sensor Status</p>
+          <p className="text-white/40">Device & Sensor Status</p>
         </div>
         <Link href="/dashboard">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="p-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-white transition"
+            className="p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white transition"
           >
             <Home size={24} />
           </motion.button>
         </Link>
       </motion.div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Device Connection Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -124,8 +130,8 @@ export default function SettingsPage() {
                 <h2 className="text-xl font-semibold text-white mb-2">
                   Device Connection
                 </h2>
-                <p className="text-slate-400 text-sm mb-4">
-                  ESP32 Air Quality Monitor
+                <p className="text-white/40 text-sm mb-4">
+                  ESP32 with MQ135 & MQ7
                 </p>
               </div>
               <motion.div
@@ -143,8 +149,8 @@ export default function SettingsPage() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-300">Status</span>
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
+                <span className="text-white/60">Status</span>
                 <motion.div
                   initial={false}
                   animate={{
@@ -166,15 +172,15 @@ export default function SettingsPage() {
                 </motion.div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-300">Device ID</span>
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
+                <span className="text-white/60">Device ID</span>
                 <span className="text-white font-mono text-sm">
                   {deviceStatus.deviceId}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-300">Last Seen</span>
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
+                <span className="text-white/60">Last Seen</span>
                 <span className="text-white text-sm">{deviceStatus.lastSeen}</span>
               </div>
             </div>
@@ -193,8 +199,8 @@ export default function SettingsPage() {
                 <h2 className="text-xl font-semibold text-white mb-2">
                   Sensor Status
                 </h2>
-                <p className="text-slate-400 text-sm mb-4">
-                  Air Quality Sensor
+                <p className="text-white/40 text-sm mb-4">
+                  MQ135 & MQ7 Sensors
                 </p>
               </div>
               <motion.div
@@ -212,8 +218,8 @@ export default function SettingsPage() {
             </div>
 
             <div className="mt-6 space-y-3">
-              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-300">Sensor Health</span>
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
+                <span className="text-white/60">Sensor Health</span>
                 <motion.div
                   initial={false}
                   animate={{
@@ -235,15 +241,15 @@ export default function SettingsPage() {
                 </motion.div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-300">PM2.5</span>
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
+                <span className="text-white/60">MQ7 (CO)</span>
                 <span className="text-white font-mono">
-                  {sensorStatus.pm25 ? `${sensorStatus.pm25.toFixed(1)} µg/m³` : "N/A"}
+                  {sensorStatus.pm25 ? `${sensorStatus.pm25.toFixed(1)} ppm` : "N/A"}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg">
-                <span className="text-slate-300">CO2</span>
+              <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
+                <span className="text-white/60">MQ135 (CO2)</span>
                 <span className="text-white font-mono">
                   {sensorStatus.co2 ? `${sensorStatus.co2.toFixed(0)} ppm` : "N/A"}
                 </span>
@@ -263,38 +269,30 @@ export default function SettingsPage() {
             <h2 className="text-xl font-semibold text-white mb-4">
               Environment Readings
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-slate-800/50 rounded-lg text-center">
-                <p className="text-slate-400 text-sm mb-2">Temperature</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="p-4 bg-white/5 border border-white/10 rounded-lg text-center">
+                <p className="text-white/40 text-sm mb-2">DHT22 (Temp)</p>
                 <p className="text-2xl font-bold text-white">
                   {sensorStatus.temperature
                     ? `${sensorStatus.temperature.toFixed(1)}°C`
                     : "N/A"}
                 </p>
               </div>
-              <div className="p-4 bg-slate-800/50 rounded-lg text-center">
-                <p className="text-slate-400 text-sm mb-2">Humidity</p>
+              <div className="p-4 bg-white/5 border border-white/10 rounded-lg text-center">
+                <p className="text-white/40 text-sm mb-2">DHT22 (Humidity)</p>
                 <p className="text-2xl font-bold text-white">
                   {sensorStatus.humidity
                     ? `${sensorStatus.humidity.toFixed(1)}%`
                     : "N/A"}
                 </p>
               </div>
-              <div className="p-4 bg-slate-800/50 rounded-lg text-center">
-                <p className="text-slate-400 text-sm mb-2">PM10</p>
-                <p className="text-2xl font-bold text-white">
-                  {sensorStatus.pm10
-                    ? `${sensorStatus.pm10.toFixed(1)}`
-                    : "N/A"}
-                </p>
-              </div>
-              <div className="p-4 bg-slate-800/50 rounded-lg text-center">
-                <p className="text-slate-400 text-sm mb-2">Status</p>
+              <div className="p-4 bg-white/5 border border-white/10 rounded-lg text-center">
+                <p className="text-white/40 text-sm mb-2">Sensor Status</p>
                 <p
                   className={`text-lg font-bold ${
                     sensorStatus.isWorking
-                      ? "text-green-400"
-                      : "text-red-400"
+                      ? "text-primary"
+                      : "text-accent"
                   }`}
                 >
                   {sensorStatus.isWorking ? "Active" : "Offline"}
@@ -303,7 +301,10 @@ export default function SettingsPage() {
             </div>
           </GlassCard>
         </motion.div>
+        </div>
+
+        <Navbar />
       </div>
-    </div>
+    </main>
   );
 }
