@@ -104,41 +104,52 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, [isOffline]);
 
-  // ==============================
-  // 🔥 HYBRID CALIBRATION (MIDDLE MAN)
-  // ==============================
-  const calibration = useMemo(() => {
-    if (!sensorData) return null;
+// ==============================
+// 🔥 TUNED HYBRID CALIBRATION
+// ==============================
+const calibration = useMemo(() => {
+  if (!sensorData) return null;
 
-    const raw135 = sensorData.mq135_raw;
-    const raw7 = sensorData.mq7_raw;
+  const raw135 = sensorData.mq135_raw;
+  const raw7 = sensorData.mq7_raw;
 
-    const voltage = (raw135 / 4095) * 3.3;
+  // 1. Convert Raw (0-4095) to Voltage (ESP32 uses 3.3V)
+  const voltage = (raw135 / 4095) * 3.3;
 
-    const RL = 1.0;
-    const rs = ((3.3 - voltage) / voltage) * RL;
+  // 2. Calculate Sensor Resistance (Rs)
+  const RL = 1.0; 
+  const rs = voltage > 0 ? ((3.3 - voltage) / voltage) * RL : 0;
 
-    const r0 = 1; // 🔧 tune once in fresh air
-    const ratio = rs / r0;
+  // 3. TUNING R0: Change this from 1 to roughly 30-40
+  // If your AQI is still too high, increase this number. 
+  // If your AQI is too low, decrease it.
+  const r0 = 35.0; 
+  const ratio = rs / r0;
 
-    // softer realistic curve
-    const co2ppm = Math.round(400 * Math.pow(ratio, -1.8));
+  // 4. Calculate CO2 PPM (Realistic Indoor levels are 400-1000)
+  // We use a more standard power function for MQ135
+  const co2ppm = Math.round(400 * Math.pow(ratio, -1.5));
 
-    const coppm = Math.round((raw7 / 4095) * 50);
+  // 5. Calculate CO PPM (MQ7)
+  // MQ7 is very sensitive, we scale it down to keep it realistic
+  const coppm = Math.round((raw7 / 4095) * 20); 
 
-    const co2Index = Math.min((co2ppm / 1500) * 200, 300);
-    const coIndex = Math.min((coppm / 50) * 200, 300);
+  // 6. Calculate AQI Index (Mapping to 0-500 scale)
+  // Standard: 400ppm CO2 is "Base/Good", 2000ppm is "Poor"
+  const co2Index = Math.max(0, ((co2ppm - 400) / 1600) * 150);
+  const coIndex = (coppm / 25) * 150;
 
-    const aqi = Math.round(Math.max(co2Index, coIndex));
+  // Resulting AQI
+  const aqi = Math.round(Math.max(co2Index, coIndex) + 20); // +20 as a baseline offset
 
-    return {
-      temp: sensorData.temperature,
-      humidity: sensorData.humidity,
-      co2ppm: Math.min(co2ppm, 5000),
-      coppm,
-      aqi,
-    };
-  }, [sensorData]);
+  return {
+    temp: sensorData.temperature,
+    humidity: sensorData.humidity,
+    co2ppm: Math.min(co2ppm, 5000),
+    coppm,
+    aqi: Math.min(aqi, 500), // Cap at 500
+  };
+}, [sensorData]);
 
   const activeAQI = calibration?.aqi ?? 0;
 
