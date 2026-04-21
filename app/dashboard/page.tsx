@@ -110,44 +110,34 @@ export default function Dashboard() {
 const calibration = useMemo(() => {
   if (!sensorData) return null;
 
-  const raw135 = sensorData.mq135_raw;
-  const raw7 = sensorData.mq7_raw;
+  const raw135 = sensorData.mq135_raw; // Your air quality sensor
+  const raw7 = sensorData.mq7_raw;     // Your CO sensor
 
-  // 1. Convert Raw (0-4095) to Voltage (ESP32 uses 3.3V)
-  const voltage = (raw135 / 4095) * 3.3;
+  // 1. TUNE THESE TWO NUMBERS
+  // Set 'minRaw' to the value you see when your room air is CLEAN (e.g., 2500)
+  // Set 'maxRaw' to what you'd expect if someone blew smoke on the sensor (e.g., 3800)
+  const minRaw = 2600; 
+  const maxRaw = 3600;
 
-  // 2. Calculate Sensor Resistance (Rs)
-  const RL = 1.0; 
-  const rs = voltage > 0 ? ((3.3 - voltage) / voltage) * RL : 0;
+  // 2. Calculate AQI (Linear Mapping)
+  // This converts your raw 2600-3600 range into a 20-400 AQI range
+  let calculatedAqi = ((raw135 - minRaw) / (maxRaw - minRaw)) * 400;
+  
+  // Base offset so it doesn't show 0
+  calculatedAqi = Math.max(25, Math.round(calculatedAqi)); 
 
-  // 3. TUNING R0: Change this from 1 to roughly 30-40
-  // If your AQI is still too high, increase this number. 
-  // If your AQI is too low, decrease it.
-  const r0 = 35.0; 
-  const ratio = rs / r0;
-
-  // 4. Calculate CO2 PPM (Realistic Indoor levels are 400-1000)
-  // We use a more standard power function for MQ135
-  const co2ppm = Math.round(400 * Math.pow(ratio, -1.5));
-
-  // 5. Calculate CO PPM (MQ7)
-  // MQ7 is very sensitive, we scale it down to keep it realistic
-  const coppm = Math.round((raw7 / 4095) * 20); 
-
-  // 6. Calculate AQI Index (Mapping to 0-500 scale)
-  // Standard: 400ppm CO2 is "Base/Good", 2000ppm is "Poor"
-  const co2Index = Math.max(0, ((co2ppm - 400) / 1600) * 150);
-  const coIndex = (coppm / 25) * 150;
-
-  // Resulting AQI
-  const aqi = Math.round(Math.max(co2Index, coIndex) + 20); // +20 as a baseline offset
+  // 3. Realistic Gas Estimates
+  // CO2: Base is 400ppm, max is 2000ppm
+  const co2ppm = Math.round(400 + (calculatedAqi * 4));
+  // CO: Just a simple scale of the MQ7 raw
+  const coppm = Math.round((raw7 / 4095) * 40);
 
   return {
     temp: sensorData.temperature,
     humidity: sensorData.humidity,
     co2ppm: Math.min(co2ppm, 5000),
-    coppm,
-    aqi: Math.min(aqi, 500), // Cap at 500
+    coppm: coppm,
+    aqi: Math.min(calculatedAqi, 500),
   };
 }, [sensorData]);
 
