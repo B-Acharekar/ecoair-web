@@ -29,6 +29,7 @@ type SensorPayload = {
 export default function Dashboard() {
   const [sensorData, setSensorData] = useState<SensorPayload | null>(null);
   const [aqiHistory, setAqiHistory] = useState<number[]>([]);
+  const [cityData, setCityData] = useState<{ aqi: number; city: string } | null>(null);
 
   const [isOffline, setIsOffline] = useState(false);
   const [failCount, setFailCount] = useState(0);
@@ -103,6 +104,27 @@ export default function Dashboard() {
 
     return () => clearTimeout(timer);
   }, [isOffline]);
+
+// City AQI
+  useEffect(() => {
+  const fetchCityAQI = async () => {
+    try {
+      // You can change 'mumbai' to a dynamic user preference later
+      const res = await fetch(`/api/aqi?city=Mumbai`); 
+      const data = await res.json();
+      if (data.status === "ok") {
+        setCityData({ aqi: data.aqi, city: data.city });
+      }
+    } catch (err) {
+      console.error("Failed to fetch city AQI", err);
+    }
+  };
+
+  fetchCityAQI();
+  // Refresh city data every 30 minutes (AQI doesn't change every 5 seconds)
+  const cityInterval = setInterval(fetchCityAQI, 1000 * 60 * 30);
+  return () => clearInterval(cityInterval);
+}, []);
 
 // ==============================
 // 🔥 TUNED HYBRID CALIBRATION
@@ -224,7 +246,11 @@ const calibration = useMemo(() => {
 
       <div className="space-y-8">
 
-        <SyncInsight homeAQI={activeAQI} cityAQI={80} cityName="Mumbai" />
+        <SyncInsight 
+        homeAQI={activeAQI} 
+        cityAQI={cityData?.aqi ?? 0} // Use real AQI, fallback to 0
+        cityName={cityData?.city ?? "Loading..."} // Use real City Name
+        />
 
         <AQIHero aqi={activeAQI} level={level} color={statusColor} />
 

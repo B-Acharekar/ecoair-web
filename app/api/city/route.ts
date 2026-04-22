@@ -65,9 +65,9 @@ export async function GET(request: Request) {
         const coordinates = data.data.city?.geo || data.data.geo || [0, 0];
 
         return NextResponse.json({
-            aqi: finalTrueAQI,
+            aqi: data.data.aqi || finalTrueAQI,
             city: data.data.city?.name || "Unknown Station",
-            dominentpol: aqiPm25 > aqiPm10 ? "pm2.5" : "pm10",
+            dominentpol: data.data.dominentpol || "Unknown",
             geo: coordinates, // Return the safe coordinates
             status: "ok"
         });
