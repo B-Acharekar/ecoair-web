@@ -3,11 +3,26 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
-    const city = searchParams.get('city'); // This gets "mumbai" from ?city=mumbai
+    const city = searchParams.get('city'); 
     const token = process.env.WAQI_API_TOKEN;
 
     if (!city) return NextResponse.json({ error: 'City is required' }, { status: 400 });
 
+    // ==========================================
+    // CUSTOM LOGIC FOR THANE
+    // ==========================================
+    if (city.toLowerCase() === 'thane') {
+        return NextResponse.json({
+            aqi: 103,
+            city: "Thane,Maharashtra, India",
+            status: "ok",
+            note: "Manual Override" // Optional: just to know it's hardcoded
+        });
+    }
+
+    // ==========================================
+    // DYNAMIC LOGIC FOR ALL OTHER CITIES
+    // ==========================================
     try {
         const res = await fetch(`https://api.waqi.info/feed/${city}/?token=${token}`);
         const data = await res.json();
@@ -20,6 +35,7 @@ export async function GET(request: Request) {
             status: "ok"
         });
     } catch (err) {
+        console.error("AQI Fetch Error:", err);
         return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
     }
 }

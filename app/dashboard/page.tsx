@@ -110,7 +110,7 @@ export default function Dashboard() {
   const fetchCityAQI = async () => {
     try {
       // You can change 'mumbai' to a dynamic user preference later
-      const res = await fetch(`/api/aqi?city=Mumbai`); 
+      const res = await fetch(`/api/aqi?city=Thane`); 
       const data = await res.json();
       if (data.status === "ok") {
         setCityData({ aqi: data.aqi, city: data.city });
